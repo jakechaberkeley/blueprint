@@ -15,6 +15,7 @@ import { Overlay, CheckBox, Button } from 'react-native-elements';
 import { cloneDeep } from 'lodash';
 
 interface Availability {
+  [index:string]: any;
   monday: boolean;
   tuesday: boolean;
   wednesday: boolean;
@@ -102,11 +103,12 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
    */
   filterJobs = (jobs: JobRecord[], availability: Availability): void => {
     // Step 0: Clone the jobs input
-    const newJobs: JobRecord[] = cloneDeep(jobs);
-    console.log(newJobs, availability);
+    let newJobs: JobRecord[] = cloneDeep(jobs);
+    //console.log(newJobs, availability);
 
     // Step 1: Remove jobs where the schedule doesn't align with the users' availability.
-
+    newJobs = newJobs.filter(job => job.schedule.every(day => availability[day.toLowerCase()] === true));
+    console.log(newJobs.length);
     // Step 2: Save into state
     this.setState({ jobs: newJobs });
   };
