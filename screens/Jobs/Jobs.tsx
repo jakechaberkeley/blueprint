@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { View } from 'react-native';
+import { View,Dimensions } from 'react-native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { GlobalContext } from '@components/ContextProvider';
 import { BaseScreen } from '../BaseScreen/BaseScreen';
@@ -9,6 +9,8 @@ import { getJobs, updateJob } from '@utils/airtable/requests';
 import { Status } from '../StatusScreen/StatusScreen';
 import ContactsModal from '@components/ContactsModal/ContactsModal';
 import { StatusController } from '@screens/StatusScreen/StatusController';
+import styled from 'styled-components/native';
+
 
 // BWBP
 import { Overlay, CheckBox, Button } from 'react-native-elements';
@@ -99,6 +101,7 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
       status: this.getStatus(jobs),
     });
   };
+
   //bonus question here
   //credits to https://react-native-elements.github.io/react-native-elements/docs/overlay/#isvisible
   OverlaySchedule = () =>{
@@ -109,6 +112,12 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
     };
 
     const { monday, tuesday, wednesday, thursday, friday } = this.state.availability;
+    const win = Dimensions.get('window');
+    const LoginHeader = styled.Text`
+      font-size: 40px;
+      font-family: source-sans-pro-bold;
+      margin: 2.5% 0 5% 10%;
+      `;
 
     return (
       <View style={{ alignItems: 'center', marginVertical: 20 }}>
@@ -121,9 +130,14 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
               
             }}
           />
-        <Overlay isVisible={visible} onBackdropPress ={toggleOverlay}>
+        <Overlay 
+        isVisible={visible} 
+        onBackdropPress ={toggleOverlay}
+        height = {win.height /(1.7)}
+       >
 
           <View>
+            <LoginHeader>Schedule</LoginHeader>
           <CheckBox
             title="Monday"
             checked={monday}
@@ -237,14 +251,7 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
           />
         }
       >
-          <View style={{ alignItems: 'center', marginVertical: 0 }}>
-
-        </View>
-      
-      <this.OverlaySchedule />
-      
-        
-
+        <this.OverlaySchedule />
         <StatusController defaultChild={this.renderCards()} status={this.state.status} />
       </BaseScreen>
     );
