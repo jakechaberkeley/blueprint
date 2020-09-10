@@ -52,7 +52,6 @@ interface JobsScreenProps {
  */
 export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState> {
   static contextType = GlobalContext;
-
   constructor(props: JobsScreenProps) {
     super(props);
 
@@ -106,7 +105,6 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
   //credits to https://react-native-elements.github.io/react-native-elements/docs/overlay/#isvisible
   OverlaySchedule = () =>{
     const [visible, setVisible] = useState(false);
-
     const toggleOverlay = () => {
       setVisible(!visible);
     };
@@ -119,6 +117,8 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
       margin: 2.5% 0 5% 10%;
       `;
 
+    console.log("loaded this!");
+    
     return (
       <View style={{ alignItems: 'center', marginVertical: 20 }}>
             <Button
@@ -127,7 +127,6 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
             
             onPress={(): void => {
               toggleOverlay();
-              
             }}
           />
         <Overlay 
@@ -135,7 +134,6 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
         onBackdropPress ={toggleOverlay}
         height = {win.height /(1.7)}
        >
-
           <View>
             <LoginHeader>Schedule</LoginHeader>
           <CheckBox
@@ -210,9 +208,17 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
     // Step 0: Clone the jobs input
     let newJobs: JobRecord[] = cloneDeep(jobs);
     //console.log(newJobs, availability);
+    
+    //testing
+    console.log("Length is" + jobs.length);
+    for(let i = 0; i < jobs.length ; i++){
+    console.log(jobs[i].storeName);
+    console.log(jobs[i].schedule);
+    console.log("------")
+  }
 
     // Step 1: Remove jobs where the schedule doesn't align with the users' availability.
-    newJobs = newJobs.filter(job => job.schedule.every(day => availability[day.toLowerCase()] === true));
+    newJobs = newJobs.filter(job => job.schedule.every(day => availability[day.toLowerCase()] == true));
     console.log(newJobs.length);
     // Step 2: Save into state
     this.setState({ jobs: newJobs });
