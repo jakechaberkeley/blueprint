@@ -1,5 +1,5 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, {useState} from 'react';
+import { View,Dimensions } from 'react-native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { GlobalContext } from '@components/ContextProvider';
 import { BaseScreen } from '../BaseScreen/BaseScreen';
@@ -9,12 +9,15 @@ import { getJobs, updateJob } from '@utils/airtable/requests';
 import { Status } from '../StatusScreen/StatusScreen';
 import ContactsModal from '@components/ContactsModal/ContactsModal';
 import { StatusController } from '@screens/StatusScreen/StatusController';
+import styled from 'styled-components/native';
+
 
 // BWBP
 import { Overlay, CheckBox, Button } from 'react-native-elements';
 import { cloneDeep } from 'lodash';
 
 interface Availability {
+  [index:string]: any;
   monday: boolean;
   tuesday: boolean;
   wednesday: boolean;
@@ -35,6 +38,8 @@ interface JobsScreenProps {
   navigation: BottomTabNavigationProp;
 }
 
+
+
 /**
  * We have a feature request! 
  *
@@ -47,7 +52,6 @@ interface JobsScreenProps {
  */
 export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState> {
   static contextType = GlobalContext;
-
   constructor(props: JobsScreenProps) {
     super(props);
 
@@ -97,55 +101,41 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
     });
   };
 
-  /**
-   * TODO: Write filterJobs function that updates the components' state with jobs that align with the users' weekly schedule.
-   */
-  filterJobs = (jobs: JobRecord[], availability: Availability): void => {
-    // Step 0: Clone the jobs input
-    const newJobs: JobRecord[] = cloneDeep(jobs);
-    console.log(newJobs, availability);
+  //bonus question here
+  //credits to https://react-native-elements.github.io/react-native-elements/docs/overlay/#isvisible
+  OverlaySchedule = () =>{
+    const [visible, setVisible] = useState(false);
+    const toggleOverlay = () => {
+      setVisible(!visible);
+    };
 
-    // Step 1: Remove jobs where the schedule doesn't align with the users' availability.
-
-    // Step 2: Save into state
-    this.setState({ jobs: newJobs });
-  };
-
-  getStatus = (jobs: JobRecord[]): Status => {
-    if (!this.context.user.graduated) {
-      return Status.jobLocked;
-    } else if (jobs.length == 0) {
-      return Status.noContent;
-    } else {
-      return Status.none;
-    }
-  };
-
-  setHeader = (): void => {
-    this.setState({ staticHeader: true });
-  };
-
-  renderCards(): React.ReactElement {
-    return <>{this.state.jobs.map((record, index) => this.createJobCard(record, index))}</>;
-  }
-
-  render() {
     const { monday, tuesday, wednesday, thursday, friday } = this.state.availability;
+    const win = Dimensions.get('window');
+    const LoginHeader = styled.Text`
+      font-size: 40px;
+      font-family: source-sans-pro-bold;
+      margin: 2.5% 0 5% 10%;
+      `;
+
+    console.log("loaded this!");
+    
     return (
-      <BaseScreen
-        title={this.state.title}
-        refreshMethod={this.fetchRecords}
-        refreshing={this.state.refreshing}
-        static={this.state.status != Status.none ? 'expanded' : ''}
-        headerRightButton={
-          <ContactsModal
-            resetTesting={(): void => {
-              this.props.navigation.navigate('Login');
+      <View style={{ alignItems: 'center', marginVertical: 20 }}>
+            <Button
+            title="Filter"
+            containerStyle={{ width: '50%' }}
+            
+            onPress={(): void => {
+              toggleOverlay();
             }}
           />
-        }
-      >
-        <View>
+        <Overlay 
+        isVisible={visible} 
+        onBackdropPress ={toggleOverlay}
+        height = {win.height /(1.7)}
+       >
+          <View>
+            <LoginHeader>Schedule</LoginHeader>
           <CheckBox
             title="Monday"
             checked={monday}
@@ -192,15 +182,82 @@ export class JobsScreen extends React.Component<JobsScreenProps, JobsScreenState
             }
           />
         </View>
+        
         <View style={{ alignItems: 'center', marginVertical: 20 }}>
           <Button
             title="Filter Search"
             containerStyle={{ width: '50%' }}
             onPress={(): void => {
               this.filterJobs(getJobs(), this.state.availability);
+              toggleOverlay();
             }}
           />
         </View>
+        </Overlay>
+      </View>
+
+    );
+
+  };
+
+
+  /**
+   * TODO: Write filterJobs function that updates the components' state with jobs that align with the users' weekly schedule.
+   */
+  filterJobs = (jobs: JobRecord[], availability: Availability): void => {
+    // Step 0: Clone the jobs input
+    let newJobs: JobRecord[] = cloneDeep(jobs);
+    //console.log(newJobs, availability);
+    
+    //testing
+    console.log("Length is" + jobs.length);
+    for(let i = 0; i < jobs.length ; i++){
+    console.log(jobs[i].storeName);
+    console.log(jobs[i].schedule);
+    console.log("------")
+  }
+
+    // Step 1: Remove jobs where the schedule doesn't align with the users' availability.
+    newJobs = newJobs.filter(job => job.schedule.every(day => availability[day.toLowerCase()] == true));
+    console.log(newJobs.length);
+    // Step 2: Save into state
+    this.setState({ jobs: newJobs });
+  };
+
+  getStatus = (jobs: JobRecord[]): Status => {
+    if (!this.context.user.graduated) {
+      return Status.jobLocked;
+    } else if (jobs.length == 0) {
+      return Status.noContent;
+    } else {
+      return Status.none;
+    }
+  };
+
+  setHeader = (): void => {
+    this.setState({ staticHeader: true });
+  };
+
+  renderCards(): React.ReactElement {
+    return <>{this.state.jobs.map((record, index) => this.createJobCard(record, index))}</>;
+  }
+
+  render() {
+    return (
+      <BaseScreen
+        title={this.state.title}
+        refreshMethod={this.fetchRecords}
+        refreshing={this.state.refreshing}
+        static={this.state.status != Status.none ? 'expanded' : ''}
+        headerRightButton={
+          <ContactsModal
+            resetTesting={(): void => {
+              this.props.navigation.navigate('Login');
+            }}
+          />
+        }
+      >
+        <this.OverlaySchedule />
         <StatusController defaultChild={this.renderCards()} status={this.state.status} />
       </BaseScreen>
     );
